@@ -77,7 +77,7 @@ html, body {
 
 <div class="title">
     <h1>🌌 AI MAGIC UNIVERSE ✨</h1>
-    <p>Move your finger and control the stars</p>
+    <p>☝️ Magnet • ✋ Explosion</p>
 </div>
 
 <div class="status" id="status">
@@ -87,7 +87,6 @@ html, body {
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-
 
 <script>
 
@@ -117,7 +116,8 @@ let fingerY = 0;
 
 let fingerDetected = false;
 let palmOpen = false;
-let previousPalmOpen = false;
+
+let explosionTimer = 0;
 
 
 /* STARS */
@@ -155,19 +155,7 @@ function createStars() {
 createStars();
 
 
-/* DISTANCE FUNCTION */
-
-function distance(a, b) {
-
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
-
-    return Math.sqrt(dx * dx + dy * dy);
-
-}
-
-
-/* STAR EXPLOSION */
+/* EXPLOSION */
 
 function explodeStars() {
 
@@ -176,18 +164,33 @@ function explodeStars() {
         const dx = star.x - fingerX;
         const dy = star.y - fingerY;
 
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        const distance =
+            Math.sqrt(dx * dx + dy * dy);
 
-        if (dist < 500 && dist > 1) {
 
-            const force = (500 - dist) / 500;
+        if (distance > 1) {
 
-            star.vx += (dx / dist) * force * 12;
-            star.vy += (dy / dist) * force * 12;
+            const force =
+                Math.max(0.4, 1 - distance / 900);
+
+
+            star.vx +=
+                (dx / distance) *
+                force *
+                18;
+
+
+            star.vy +=
+                (dy / distance) *
+                force *
+                18;
 
         }
 
     }
+
+
+    explosionTimer = 20;
 
 }
 
@@ -212,19 +215,59 @@ function animate() {
         star.y -= star.speed;
 
 
-        /* EXPLOSION VELOCITY */
+        /* EXPLOSION */
 
         star.x += star.vx;
         star.y += star.vy;
 
 
-        /* SLOW DOWN */
+        /* FRICTION */
 
-        star.vx *= 0.94;
-        star.vy *= 0.94;
+        star.vx *= 0.95;
+        star.vy *= 0.95;
 
 
-        /* SCREEN WRAP */
+        /* MAGNET */
+
+        if (fingerDetected && !palmOpen) {
+
+            const dx =
+                fingerX - star.x;
+
+            const dy =
+                fingerY - star.y;
+
+            const distance =
+                Math.sqrt(dx * dx + dy * dy);
+
+
+            if (distance < 450 && distance > 5) {
+
+                const pull =
+                    (450 - distance) / 450;
+
+
+                star.x +=
+                    dx * pull * 0.035;
+
+                star.y +=
+                    dy * pull * 0.035;
+
+
+                /* SWIRL */
+
+                star.x +=
+                    -dy * pull * 0.018;
+
+                star.y +=
+                    dx * pull * 0.018;
+
+            }
+
+        }
+
+
+        /* WRAP */
 
         if (star.y < 0) {
             star.y = canvas.height;
@@ -239,40 +282,7 @@ function animate() {
         }
 
 
-        /* MAGNET EFFECT */
-
-        if (fingerDetected && !palmOpen) {
-
-            const dx = fingerX - star.x;
-            const dy = fingerY - star.y;
-
-            const dist =
-                Math.sqrt(dx * dx + dy * dy);
-
-
-            if (dist < 450 && dist > 5) {
-
-                const pull =
-                    (450 - dist) / 450;
-
-
-                /* Pull */
-
-                star.x += dx * pull * 0.035;
-                star.y += dy * pull * 0.035;
-
-
-                /* Swirl */
-
-                star.x += -dy * pull * 0.018;
-                star.y += dx * pull * 0.018;
-
-            }
-
-        }
-
-
-        /* DRAW STAR */
+        /* STAR */
 
         ctx.beginPath();
 
@@ -296,8 +306,7 @@ function animate() {
 
     if (fingerDetected) {
 
-
-        /* MAGNETIC RING */
+        /* LARGE RING */
 
         ctx.beginPath();
 
@@ -310,45 +319,28 @@ function animate() {
         );
 
         ctx.strokeStyle =
-            "rgba(0,220,255,0.25)";
+            palmOpen
+            ? "rgba(255,120,255,0.8)"
+            : "rgba(0,220,255,0.4)";
 
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
 
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 25;
 
-        ctx.shadowColor = "cyan";
+        ctx.shadowColor =
+            palmOpen ? "magenta" : "cyan";
 
         ctx.stroke();
 
 
-        /* INNER RING */
+        /* CORE */
 
         ctx.beginPath();
 
         ctx.arc(
             fingerX,
             fingerY,
-            30,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.strokeStyle =
-            "rgba(120,220,255,0.8)";
-
-        ctx.lineWidth = 2;
-
-        ctx.stroke();
-
-
-        /* ENERGY CORE */
-
-        ctx.beginPath();
-
-        ctx.arc(
-            fingerX,
-            fingerY,
-            9,
+            palmOpen ? 14 : 9,
             0,
             Math.PI * 2
         );
@@ -357,11 +349,38 @@ function animate() {
 
         ctx.shadowBlur = 40;
 
-        ctx.shadowColor = "cyan";
+        ctx.shadowColor =
+            palmOpen ? "magenta" : "cyan";
 
         ctx.fill();
 
         ctx.shadowBlur = 0;
+
+    }
+
+
+    /* EXPLOSION FLASH */
+
+    if (explosionTimer > 0) {
+
+        ctx.beginPath();
+
+        ctx.arc(
+            fingerX,
+            fingerY,
+            (20 - explosionTimer) * 20,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.strokeStyle =
+            `rgba(255,150,255,${explosionTimer / 20})`;
+
+        ctx.lineWidth = 5;
+
+        ctx.stroke();
+
+        explosionTimer--;
 
     }
 
@@ -414,7 +433,6 @@ hands.onResults(function(results) {
 
         const indexFinger = hand[8];
 
-
         fingerX =
             (1 - indexFinger.x) *
             canvas.width;
@@ -423,65 +441,73 @@ hands.onResults(function(results) {
             indexFinger.y *
             canvas.height;
 
-
         fingerDetected = true;
 
 
-        /* CHECK OPEN PALM */
+        /*
+        SIMPLE OPEN HAND DETECTION
 
-        const wrist = hand[0];
-
-        const indexTip = hand[8];
-        const middleTip = hand[12];
-        const ringTip = hand[16];
-        const pinkyTip = hand[20];
-
-        const indexPip = hand[6];
-        const middlePip = hand[10];
-        const ringPip = hand[14];
-        const pinkyPip = hand[18];
-
+        Check whether fingers are extended.
+        */
 
         const indexOpen =
-            distance(indexTip, wrist) >
-            distance(indexPip, wrist);
+            hand[8].y < hand[6].y;
 
         const middleOpen =
-            distance(middleTip, wrist) >
-            distance(middlePip, wrist);
+            hand[12].y < hand[10].y;
 
         const ringOpen =
-            distance(ringTip, wrist) >
-            distance(ringPip, wrist);
+            hand[16].y < hand[14].y;
 
         const pinkyOpen =
-            distance(pinkyTip, wrist) >
-            distance(pinkyPip, wrist);
+            hand[20].y < hand[18].y;
 
 
-        palmOpen =
-            indexOpen &&
-            middleOpen &&
-            ringOpen &&
-            pinkyOpen;
+        const openCount =
+            Number(indexOpen) +
+            Number(middleOpen) +
+            Number(ringOpen) +
+            Number(pinkyOpen);
 
 
-        /* OPEN PALM DETECTED */
+        /*
+        3 OR MORE OPEN FINGERS
+        = OPEN PALM
+        */
 
-        if (palmOpen && !previousPalmOpen) {
+        const newPalmOpen =
+            openCount >= 3;
+
+
+        /*
+        Trigger explosion only
+        when palm becomes open
+        */
+
+        if (
+            newPalmOpen &&
+            !palmOpen
+        ) {
+
+            palmOpen = true;
 
             explodeStars();
 
         }
 
+        else if (!newPalmOpen) {
 
-        previousPalmOpen = palmOpen;
+            palmOpen = false;
 
+        }
+
+
+        /* STATUS */
 
         if (palmOpen) {
 
             status.innerText =
-                "💥 OPEN PALM — STAR EXPLOSION!";
+                "💥 STAR EXPLOSION!";
 
         }
 
@@ -498,7 +524,6 @@ hands.onResults(function(results) {
 
         fingerDetected = false;
         palmOpen = false;
-        previousPalmOpen = false;
 
         status.innerText =
             "☝️ Show your hand";
