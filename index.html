@@ -86,7 +86,6 @@ html, body {
 
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
 
 
@@ -102,10 +101,8 @@ const status = document.getElementById("status");
 /* CANVAS */
 
 function resize() {
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
 }
 
 resize();
@@ -117,7 +114,6 @@ window.addEventListener("resize", resize);
 
 let fingerX = 0;
 let fingerY = 0;
-
 let fingerDetected = false;
 
 
@@ -149,7 +145,6 @@ function createStars() {
         });
 
     }
-
 }
 
 createStars();
@@ -178,9 +173,7 @@ function animate() {
         star.y -= star.speed;
 
         if (star.y < 0) {
-
             star.y = canvas.height;
-
         }
 
 
@@ -188,7 +181,7 @@ function animate() {
         y = star.y;
 
 
-        /* FINGER ATTRACTOR */
+        /* STRONG FINGER ATTRACTOR */
 
         if (fingerDetected) {
 
@@ -199,14 +192,15 @@ function animate() {
                 Math.sqrt(dx * dx + dy * dy);
 
 
-            if (distance < 200) {
+            if (distance < 300) {
 
                 const force =
-                    (200 - distance) / 200;
+                    (300 - distance) / 300;
 
-                x += dx * force * 0.18;
 
-                y += dy * force * 0.18;
+                x += dx * force * 0.65;
+
+                y += dy * force * 0.65;
 
             }
 
@@ -237,20 +231,20 @@ function animate() {
 
     if (fingerDetected) {
 
-        /* OUTER GLOW */
+        /* OUTER RING */
 
         ctx.beginPath();
 
         ctx.arc(
             fingerX,
             fingerY,
-            25,
+            30,
             0,
             Math.PI * 2
         );
 
         ctx.strokeStyle =
-            "rgba(120,220,255,0.4)";
+            "rgba(120,220,255,0.5)";
 
         ctx.lineWidth = 2;
 
@@ -268,7 +262,7 @@ function animate() {
         ctx.arc(
             fingerX,
             fingerY,
-            7,
+            8,
             0,
             Math.PI * 2
         );
@@ -331,7 +325,7 @@ hands.onResults(function(results) {
             results.multiHandLandmarks[0];
 
 
-        /* INDEX FINGER TIP */
+        /* INDEX FINGER TIP = 8 */
 
         const indexFinger = hand[8];
 
