@@ -28,7 +28,7 @@
       color: white;
       font-size: 20px;
       z-index: 10;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.6);
       padding: 10px 15px;
       border-radius: 10px;
     }
@@ -49,24 +49,21 @@
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+
 const video = document.getElementById("video");
 const status = document.getElementById("status");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+
+// =====================================
+// STARS
+// =====================================
+
 let stars = [];
-const STAR_COUNT = 500;
 
-let explosionCooldown = 0;
-let palmDetected = false;
-
-
-// ===============================
-// CREATE STARS
-// ===============================
-
-for (let i = 0; i < STAR_COUNT; i++) {
+for (let i = 0; i < 500; i++) {
 
   stars.push({
     x: Math.random() * canvas.width,
@@ -81,30 +78,126 @@ for (let i = 0; i < STAR_COUNT; i++) {
 }
 
 
-// ===============================
-// DRAW STARS
-// ===============================
+// =====================================
+// FINGER POSITION
+// =====================================
 
-function drawStars() {
+let fingerDetected = false;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+let fingerX = 0;
+let fingerY = 0;
+
+
+// =====================================
+// MAGNET
+// =====================================
+
+function magnetStars() {
+
+  if (!fingerDetected) return;
 
   for (let star of stars) {
 
-    // movement
+    const dx = fingerX - star.x;
+    const dy = fingerY - star.y;
+
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < 400 && distance > 5) {
+
+      const pull = (400 - distance) / 400;
+
+      star.x += dx * pull * 0.035;
+      star.y += dy * pull * 0.035;
+
+      // swirl
+      star.x += -dy * pull * 0.015;
+      star.y += dx * pull * 0.015;
+    }
+  }
+}
+
+
+// =====================================
+// EXPLOSION
+// =====================================
+
+function explodeStars(power) {
+
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+
+  for (let star of stars) {
+
+    const dx = star.x - centerX;
+    const dy = star.y - centerY;
+
+    const distance =
+      Math.sqrt(dx * dx + dy * dy) || 1;
+
+    star.vx += (dx / distance) * power;
+    star.vy += (dy / distance) * power;
+  }
+
+  // Explosion ring
+
+  ctx.beginPath();
+
+  ctx.arc(
+    centerX,
+    centerY,
+    80,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 8;
+  ctx.stroke();
+}
+
+
+// =====================================
+// DRAW
+// =====================================
+
+function animate() {
+
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+
+  // Move stars
+
+  for (let star of stars) {
+
     star.x += star.vx;
     star.y += star.vy;
 
-    // friction
     star.vx *= 0.97;
     star.vy *= 0.97;
 
-    // screen wrap
-    if (star.x < 0) star.x = canvas.width;
-    if (star.x > canvas.width) star.x = 0;
 
-    if (star.y < 0) star.y = canvas.height;
-    if (star.y > canvas.height) star.y = 0;
+    // Wrap around screen
+
+    if (star.x < 0)
+      star.x = canvas.width;
+
+    if (star.x > canvas.width)
+      star.x = 0;
+
+    if (star.y < 0)
+      star.y = canvas.height;
+
+    if (star.y > canvas.height)
+      star.y = 0;
+
+
+    // Draw
 
     ctx.beginPath();
 
@@ -117,69 +210,54 @@ function drawStars() {
     );
 
     ctx.fillStyle = "white";
+
     ctx.fill();
   }
 
-  requestAnimationFrame(drawStars);
-}
 
-drawStars();
+  magnetStars();
 
 
-// ===============================
-// EXPLOSION
-// ===============================
+  // Finger glow
 
-function explodeStars() {
+  if (fingerDetected) {
 
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
+    ctx.beginPath();
 
-  for (let star of stars) {
+    ctx.arc(
+      fingerX,
+      fingerY,
+      25,
+      0,
+      Math.PI * 2
+    );
 
-    const dx = star.x - centerX;
-    const dy = star.y - centerY;
-
-    const distance = Math.sqrt(dx * dx + dy * dy) || 1;
-
-    const force = 12;
-
-    star.vx += (dx / distance) * force;
-    star.vy += (dy / distance) * force;
+    ctx.strokeStyle = "#00ffff";
+    ctx.lineWidth = 4;
+    ctx.stroke();
   }
 
-  // flash
-  ctx.beginPath();
 
-  ctx.arc(
-    centerX,
-    centerY,
-    50,
-    0,
-    Math.PI * 2
-  );
-
-  ctx.strokeStyle = "white";
-  ctx.lineWidth = 8;
-  ctx.stroke();
-
-  status.innerText = "💥 STAR EXPLOSION!";
-
-  setTimeout(() => {
-    status.innerText = "✋ Show Open Palm";
-  }, 700);
+  requestAnimationFrame(animate);
 }
 
+animate();
 
-// ===============================
+
+// =====================================
 // MEDIAPIPE
-// ===============================
+// =====================================
 
 const hands = new Hands({
+
   locateFile: (file) => {
+
     return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+
   }
+
 });
+
 
 hands.setOptions({
 
@@ -194,9 +272,11 @@ hands.setOptions({
 });
 
 
-// ===============================
-// HAND DETECTION
-// ===============================
+// =====================================
+// GESTURE DETECTION
+// =====================================
+
+let lastExplosion = 0;
 
 hands.onResults((results) => {
 
@@ -205,36 +285,37 @@ hands.onResults((results) => {
     results.multiHandLandmarks.length === 0
   ) {
 
+    fingerDetected = false;
+
     status.innerText = "🤚 Show your hand";
 
     return;
   }
 
 
-  const hand = results.multiHandLandmarks[0];
+  const hand =
+    results.multiHandLandmarks[0];
+
+
+  // =================================
+  // INDEX FINGER POSITION
+  // =================================
+
+  fingerDetected = true;
+
+  fingerX =
+    (1 - hand[8].x) * canvas.width;
+
+  fingerY =
+    hand[8].y * canvas.height;
+
+
+  // =================================
+  // CHECK FINGERS
+  // =================================
 
   const wrist = hand[0];
 
-  // INDEX
-  const indexTip = hand[8];
-  const indexPip = hand[6];
-
-  // MIDDLE
-  const middleTip = hand[12];
-  const middlePip = hand[10];
-
-  // RING
-  const ringTip = hand[16];
-  const ringPip = hand[14];
-
-  // PINKY
-  const pinkyTip = hand[20];
-  const pinkyPip = hand[18];
-
-
-  // ===============================
-  // FINGER OPEN CHECK
-  // ===============================
 
   function fingerOpen(tip, pip) {
 
@@ -248,60 +329,104 @@ hands.onResults((results) => {
       pip.y - wrist.y
     );
 
-    return tipDistance > pipDistance * 1.08;
+    return tipDistance > pipDistance * 1.05;
   }
 
 
-  let count = 0;
+  const indexOpen =
+    fingerOpen(hand[8], hand[6]);
 
-  if (fingerOpen(indexTip, indexPip))
-    count++;
+  const middleOpen =
+    fingerOpen(hand[12], hand[10]);
 
-  if (fingerOpen(middleTip, middlePip))
-    count++;
+  const ringOpen =
+    fingerOpen(hand[16], hand[14]);
 
-  if (fingerOpen(ringTip, ringPip))
-    count++;
-
-  if (fingerOpen(pinkyTip, pinkyPip))
-    count++;
+  const pinkyOpen =
+    fingerOpen(hand[20], hand[18]);
 
 
-  // ===============================
-  // OPEN PALM
-  // ===============================
+  let openCount = 0;
 
-  if (count >= 3) {
+  if (indexOpen) openCount++;
+  if (middleOpen) openCount++;
+  if (ringOpen) openCount++;
+  if (pinkyOpen) openCount++;
 
-    status.innerText = "✋ OPEN PALM DETECTED";
 
-    if (
-      !palmDetected &&
-      Date.now() > explosionCooldown
-    ) {
+  // =================================
+  // FULL PALM
+  // =================================
 
-      palmDetected = true;
+  if (openCount === 4) {
 
-      explodeStars();
+    status.innerText =
+      "✋ FULL PALM — MAGIC EXPLOSION!";
 
-      explosionCooldown = Date.now() + 1000;
+
+    const now = Date.now();
+
+    if (now - lastExplosion > 900) {
+
+      explodeStars(18);
+
+      lastExplosion = now;
     }
 
   }
 
+
+  // =================================
+  // 3 FINGERS
+  // =================================
+
+  else if (openCount === 3) {
+
+    status.innerText =
+      "🖐️ 3 FINGERS — EXPLOSION!";
+
+
+    const now = Date.now();
+
+    if (now - lastExplosion > 900) {
+
+      explodeStars(10);
+
+      lastExplosion = now;
+    }
+
+  }
+
+
+  // =================================
+  // 1 FINGER
+  // =================================
+
+  else if (openCount === 1) {
+
+    status.innerText =
+      "☝️ MAGIC MAGNET ACTIVE";
+
+  }
+
+
+  // =================================
+  // OTHER
+  // =================================
+
   else {
 
-    palmDetected = false;
+    status.innerText =
+      "🤖 AI MAGIC READY";
 
-    status.innerText = "☝️ Show Open Palm";
   }
 
 });
 
 
-// ===============================
+// =====================================
 // CAMERA
-// ===============================
+// =====================================
 
 const camera = new Camera(video, {
 
@@ -321,9 +446,9 @@ const camera = new Camera(video, {
 camera.start();
 
 
-// ===============================
+// =====================================
 // RESIZE
-// ===============================
+// =====================================
 
 window.addEventListener("resize", () => {
 
