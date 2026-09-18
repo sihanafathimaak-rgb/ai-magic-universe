@@ -121,7 +121,7 @@ let fingerDetected = false;
 
 let stars = [];
 
-const STAR_COUNT = 400;
+const STAR_COUNT = 450;
 
 
 function createStars() {
@@ -140,7 +140,7 @@ function createStars() {
 
             alpha: Math.random() * 0.6 + 0.4,
 
-            speed: Math.random() * 0.3 + 0.05
+            speed: Math.random() * 0.25 + 0.05
 
         });
 
@@ -150,7 +150,7 @@ function createStars() {
 createStars();
 
 
-/* DRAW UNIVERSE */
+/* ANIMATION */
 
 function animate() {
 
@@ -164,56 +164,60 @@ function animate() {
 
     for (let star of stars) {
 
-        let x = star.x;
-        let y = star.y;
 
-
-        /* STAR MOVEMENT */
+        /* NORMAL STAR MOVEMENT */
 
         star.y -= star.speed;
+
 
         if (star.y < 0) {
             star.y = canvas.height;
         }
 
 
-        x = star.x;
-        y = star.y;
-
-
-        /* STRONG FINGER ATTRACTOR */
+        /* MAGIC MAGNET */
 
         if (fingerDetected) {
 
-            const dx = fingerX - x;
-            const dy = fingerY - y;
+            const dx = fingerX - star.x;
+            const dy = fingerY - star.y;
 
             const distance =
                 Math.sqrt(dx * dx + dy * dy);
 
 
-            if (distance < 300) {
+            /*
+            Stars within 450 pixels
+            are attracted to finger
+            */
+
+            if (distance < 450) {
 
                 const force =
-                    (300 - distance) / 300;
+                    (450 - distance) / 450;
 
 
-                x += dx * force * 0.65;
+                /*
+                ACTUAL STAR POSITION
+                IS CHANGED HERE
+                */
 
-                y += dy * force * 0.65;
+                star.x += dx * force * 0.12;
+
+                star.y += dy * force * 0.12;
 
             }
 
         }
 
 
-        /* STAR */
+        /* DRAW STAR */
 
         ctx.beginPath();
 
         ctx.arc(
-            x,
-            y,
+            star.x,
+            star.y,
             star.size,
             0,
             Math.PI * 2
@@ -231,6 +235,27 @@ function animate() {
 
     if (fingerDetected) {
 
+
+        /* MAGNETIC AREA */
+
+        ctx.beginPath();
+
+        ctx.arc(
+            fingerX,
+            fingerY,
+            80,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.strokeStyle =
+            "rgba(0,220,255,0.15)";
+
+        ctx.lineWidth = 2;
+
+        ctx.stroke();
+
+
         /* OUTER RING */
 
         ctx.beginPath();
@@ -244,7 +269,7 @@ function animate() {
         );
 
         ctx.strokeStyle =
-            "rgba(120,220,255,0.5)";
+            "rgba(120,220,255,0.6)";
 
         ctx.lineWidth = 2;
 
@@ -325,7 +350,7 @@ hands.onResults(function(results) {
             results.multiHandLandmarks[0];
 
 
-        /* INDEX FINGER TIP = 8 */
+        /* INDEX FINGER TIP */
 
         const indexFinger = hand[8];
 
