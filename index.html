@@ -31,7 +31,7 @@ html, body {
     height: 100%;
     object-fit: cover;
     transform: scaleX(-1);
-    opacity: 0.12;
+    opacity: 0.10;
     z-index: 0;
 }
 
@@ -121,7 +121,7 @@ let fingerDetected = false;
 
 let stars = [];
 
-const STAR_COUNT = 450;
+const STAR_COUNT = 500;
 
 
 function createStars() {
@@ -138,7 +138,7 @@ function createStars() {
 
             size: Math.random() * 2.5 + 0.5,
 
-            alpha: Math.random() * 0.6 + 0.4,
+            alpha: Math.random() * 0.7 + 0.3,
 
             speed: Math.random() * 0.25 + 0.05
 
@@ -165,7 +165,7 @@ function animate() {
     for (let star of stars) {
 
 
-        /* NORMAL STAR MOVEMENT */
+        /* NORMAL MOVEMENT */
 
         star.y -= star.speed;
 
@@ -175,7 +175,7 @@ function animate() {
         }
 
 
-        /* MAGIC MAGNET */
+        /* MAGIC VORTEX */
 
         if (fingerDetected) {
 
@@ -186,25 +186,53 @@ function animate() {
                 Math.sqrt(dx * dx + dy * dy);
 
 
-            /*
-            Stars within 450 pixels
-            are attracted to finger
-            */
+            if (distance < 450 && distance > 5) {
 
-            if (distance < 450) {
+                /*
+                Pull strength
+                */
 
-                const force =
+                const pull =
                     (450 - distance) / 450;
 
 
                 /*
-                ACTUAL STAR POSITION
-                IS CHANGED HERE
+                Move toward finger
                 */
 
-                star.x += dx * force * 0.12;
+                star.x += dx * pull * 0.035;
 
-                star.y += dy * force * 0.12;
+                star.y += dy * pull * 0.035;
+
+
+                /*
+                Swirling movement
+                */
+
+                star.x += -dy * pull * 0.018;
+
+                star.y += dx * pull * 0.018;
+
+            }
+
+
+            /*
+            If star gets very close,
+            push it outward again
+            */
+
+            if (distance < 35) {
+
+                const angle =
+                    Math.random() * Math.PI * 2;
+
+                star.x =
+                    fingerX +
+                    Math.cos(angle) * 60;
+
+                star.y =
+                    fingerY +
+                    Math.sin(angle) * 60;
 
             }
 
@@ -236,27 +264,51 @@ function animate() {
     if (fingerDetected) {
 
 
-        /* MAGNETIC AREA */
+        /* LARGE MAGNETIC FIELD */
 
         ctx.beginPath();
 
         ctx.arc(
             fingerX,
             fingerY,
-            80,
+            450,
             0,
             Math.PI * 2
         );
 
         ctx.strokeStyle =
-            "rgba(0,220,255,0.15)";
+            "rgba(0,180,255,0.05)";
 
         ctx.lineWidth = 2;
 
         ctx.stroke();
 
 
-        /* OUTER RING */
+        /* VORTEX RING */
+
+        ctx.beginPath();
+
+        ctx.arc(
+            fingerX,
+            fingerY,
+            70,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.strokeStyle =
+            "rgba(0,220,255,0.25)";
+
+        ctx.lineWidth = 2;
+
+        ctx.shadowBlur = 20;
+
+        ctx.shadowColor = "cyan";
+
+        ctx.stroke();
+
+
+        /* OUTER GLOW */
 
         ctx.beginPath();
 
@@ -269,32 +321,32 @@ function animate() {
         );
 
         ctx.strokeStyle =
-            "rgba(120,220,255,0.6)";
+            "rgba(120,220,255,0.8)";
 
         ctx.lineWidth = 2;
 
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 30;
 
         ctx.shadowColor = "cyan";
 
         ctx.stroke();
 
 
-        /* INNER GLOW */
+        /* INNER ENERGY */
 
         ctx.beginPath();
 
         ctx.arc(
             fingerX,
             fingerY,
-            8,
+            9,
             0,
             Math.PI * 2
         );
 
         ctx.fillStyle = "white";
 
-        ctx.shadowBlur = 35;
+        ctx.shadowBlur = 40;
 
         ctx.shadowColor = "cyan";
 
@@ -369,7 +421,7 @@ hands.onResults(function(results) {
 
 
         status.innerText =
-            "✨ AI MAGIC ACTIVE";
+            "🧲 MAGIC VORTEX ACTIVE";
 
     }
 
