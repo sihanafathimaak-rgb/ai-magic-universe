@@ -1,89 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Magic Universe</title>
 
-<title>AI Magic Universe ✨</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+      font-family: Arial;
+    }
 
-<style>
-html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: #000;
-}
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
 
-#canvas {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-}
+    #video {
+      display: none;
+    }
 
-#video {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transform: scaleX(-1);
-    opacity: 0.10;
-    z-index: 0;
-}
-
-.title {
-    position: fixed;
-    top: 20px;
-    width: 100%;
-    text-align: center;
-    color: white;
-    z-index: 10;
-    font-family: Arial;
-}
-
-.title h1 {
-    margin: 0;
-    font-size: 30px;
-}
-
-.title p {
-    opacity: 0.7;
-}
-
-.status {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: white;
-    background: rgba(255,255,255,0.15);
-    padding: 10px 20px;
-    border-radius: 20px;
-    z-index: 10;
-    font-family: Arial;
-}
-</style>
+    #status {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: white;
+      font-size: 20px;
+      z-index: 10;
+      background: rgba(0,0,0,0.5);
+      padding: 10px 15px;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 
 <body>
 
 <video id="video" autoplay playsinline></video>
-
 <canvas id="canvas"></canvas>
 
-<div class="title">
-    <h1>🌌 AI MAGIC UNIVERSE ✨</h1>
-    <p>☝️ Magnet • ✋ Explosion</p>
-</div>
-
-<div class="status" id="status">
-    ⭐ Universe Ready
-</div>
-
+<div id="status">🤖 Starting AI...</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
@@ -92,465 +49,288 @@ html, body {
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-
 const video = document.getElementById("video");
 const status = document.getElementById("status");
 
-
-/* CANVAS */
-
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-
-resize();
-
-window.addEventListener("resize", resize);
-
-
-/* HAND */
-
-let fingerX = 0;
-let fingerY = 0;
-
-let fingerDetected = false;
-let palmOpen = false;
-
-let explosionTimer = 0;
-
-
-/* STARS */
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
 let stars = [];
-
 const STAR_COUNT = 500;
 
+let explosionCooldown = 0;
+let palmDetected = false;
 
-function createStars() {
 
-    stars = [];
+// ===============================
+// CREATE STARS
+// ===============================
 
-    for (let i = 0; i < STAR_COUNT; i++) {
+for (let i = 0; i < STAR_COUNT; i++) {
 
-        stars.push({
+  stars.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
 
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
+    vx: 0,
+    vy: 0,
 
-            size: Math.random() * 2.5 + 0.5,
+    size: Math.random() * 2 + 1
+  });
 
-            alpha: Math.random() * 0.7 + 0.3,
-
-            speed: Math.random() * 0.25 + 0.05,
-
-            vx: 0,
-            vy: 0
-
-        });
-
-    }
 }
 
-createStars();
+
+// ===============================
+// DRAW STARS
+// ===============================
+
+function drawStars() {
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let star of stars) {
+
+    // movement
+    star.x += star.vx;
+    star.y += star.vy;
+
+    // friction
+    star.vx *= 0.97;
+    star.vy *= 0.97;
+
+    // screen wrap
+    if (star.x < 0) star.x = canvas.width;
+    if (star.x > canvas.width) star.x = 0;
+
+    if (star.y < 0) star.y = canvas.height;
+    if (star.y > canvas.height) star.y = 0;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      star.x,
+      star.y,
+      star.size,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fillStyle = "white";
+    ctx.fill();
+  }
+
+  requestAnimationFrame(drawStars);
+}
+
+drawStars();
 
 
-/* EXPLOSION */
+// ===============================
+// EXPLOSION
+// ===============================
 
 function explodeStars() {
 
-    for (let star of stars) {
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
 
-        const dx = star.x - fingerX;
-        const dy = star.y - fingerY;
+  for (let star of stars) {
 
-        const distance =
-            Math.sqrt(dx * dx + dy * dy);
+    const dx = star.x - centerX;
+    const dy = star.y - centerY;
 
+    const distance = Math.sqrt(dx * dx + dy * dy) || 1;
 
-        if (distance > 1) {
+    const force = 12;
 
-            const force =
-                Math.max(0.4, 1 - distance / 900);
+    star.vx += (dx / distance) * force;
+    star.vy += (dy / distance) * force;
+  }
 
+  // flash
+  ctx.beginPath();
 
-            star.vx +=
-                (dx / distance) *
-                force *
-                18;
+  ctx.arc(
+    centerX,
+    centerY,
+    50,
+    0,
+    Math.PI * 2
+  );
 
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 8;
+  ctx.stroke();
 
-            star.vy +=
-                (dy / distance) *
-                force *
-                18;
+  status.innerText = "💥 STAR EXPLOSION!";
 
-        }
-
-    }
-
-
-    explosionTimer = 20;
-
+  setTimeout(() => {
+    status.innerText = "✋ Show Open Palm";
+  }, 700);
 }
 
 
-/* ANIMATION */
-
-function animate() {
-
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-
-    for (let star of stars) {
-
-
-        /* NORMAL MOVEMENT */
-
-        star.y -= star.speed;
-
-
-        /* EXPLOSION */
-
-        star.x += star.vx;
-        star.y += star.vy;
-
-
-        /* FRICTION */
-
-        star.vx *= 0.95;
-        star.vy *= 0.95;
-
-
-        /* MAGNET */
-
-        if (fingerDetected && !palmOpen) {
-
-            const dx =
-                fingerX - star.x;
-
-            const dy =
-                fingerY - star.y;
-
-            const distance =
-                Math.sqrt(dx * dx + dy * dy);
-
-
-            if (distance < 450 && distance > 5) {
-
-                const pull =
-                    (450 - distance) / 450;
-
-
-                star.x +=
-                    dx * pull * 0.035;
-
-                star.y +=
-                    dy * pull * 0.035;
-
-
-                /* SWIRL */
-
-                star.x +=
-                    -dy * pull * 0.018;
-
-                star.y +=
-                    dx * pull * 0.018;
-
-            }
-
-        }
-
-
-        /* WRAP */
-
-        if (star.y < 0) {
-            star.y = canvas.height;
-        }
-
-        if (star.x < 0) {
-            star.x = canvas.width;
-        }
-
-        if (star.x > canvas.width) {
-            star.x = 0;
-        }
-
-
-        /* STAR */
-
-        ctx.beginPath();
-
-        ctx.arc(
-            star.x,
-            star.y,
-            star.size,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fillStyle =
-            `rgba(255,255,255,${star.alpha})`;
-
-        ctx.fill();
-
-    }
-
-
-    /* FINGER EFFECT */
-
-    if (fingerDetected) {
-
-        /* LARGE RING */
-
-        ctx.beginPath();
-
-        ctx.arc(
-            fingerX,
-            fingerY,
-            70,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.strokeStyle =
-            palmOpen
-            ? "rgba(255,120,255,0.8)"
-            : "rgba(0,220,255,0.4)";
-
-        ctx.lineWidth = 3;
-
-        ctx.shadowBlur = 25;
-
-        ctx.shadowColor =
-            palmOpen ? "magenta" : "cyan";
-
-        ctx.stroke();
-
-
-        /* CORE */
-
-        ctx.beginPath();
-
-        ctx.arc(
-            fingerX,
-            fingerY,
-            palmOpen ? 14 : 9,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fillStyle = "white";
-
-        ctx.shadowBlur = 40;
-
-        ctx.shadowColor =
-            palmOpen ? "magenta" : "cyan";
-
-        ctx.fill();
-
-        ctx.shadowBlur = 0;
-
-    }
-
-
-    /* EXPLOSION FLASH */
-
-    if (explosionTimer > 0) {
-
-        ctx.beginPath();
-
-        ctx.arc(
-            fingerX,
-            fingerY,
-            (20 - explosionTimer) * 20,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.strokeStyle =
-            `rgba(255,150,255,${explosionTimer / 20})`;
-
-        ctx.lineWidth = 5;
-
-        ctx.stroke();
-
-        explosionTimer--;
-
-    }
-
-
-    requestAnimationFrame(animate);
-
-}
-
-animate();
-
-
-/* AI HAND TRACKING */
+// ===============================
+// MEDIAPIPE
+// ===============================
 
 const hands = new Hands({
-
-    locateFile: function(file) {
-
-        return "https://cdn.jsdelivr.net/npm/@mediapipe/hands/" + file;
-
-    }
-
+  locateFile: (file) => {
+    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+  }
 });
-
 
 hands.setOptions({
 
-    maxNumHands: 1,
+  maxNumHands: 1,
 
-    modelComplexity: 1,
+  modelComplexity: 1,
 
-    minDetectionConfidence: 0.5,
+  minDetectionConfidence: 0.6,
 
-    minTrackingConfidence: 0.5
+  minTrackingConfidence: 0.6
 
 });
 
 
-hands.onResults(function(results) {
+// ===============================
+// HAND DETECTION
+// ===============================
+
+hands.onResults((results) => {
+
+  if (
+    !results.multiHandLandmarks ||
+    results.multiHandLandmarks.length === 0
+  ) {
+
+    status.innerText = "🤚 Show your hand";
+
+    return;
+  }
+
+
+  const hand = results.multiHandLandmarks[0];
+
+  const wrist = hand[0];
+
+  // INDEX
+  const indexTip = hand[8];
+  const indexPip = hand[6];
+
+  // MIDDLE
+  const middleTip = hand[12];
+  const middlePip = hand[10];
+
+  // RING
+  const ringTip = hand[16];
+  const ringPip = hand[14];
+
+  // PINKY
+  const pinkyTip = hand[20];
+  const pinkyPip = hand[18];
+
+
+  // ===============================
+  // FINGER OPEN CHECK
+  // ===============================
+
+  function fingerOpen(tip, pip) {
+
+    const tipDistance = Math.hypot(
+      tip.x - wrist.x,
+      tip.y - wrist.y
+    );
+
+    const pipDistance = Math.hypot(
+      pip.x - wrist.x,
+      pip.y - wrist.y
+    );
+
+    return tipDistance > pipDistance * 1.08;
+  }
+
+
+  let count = 0;
+
+  if (fingerOpen(indexTip, indexPip))
+    count++;
+
+  if (fingerOpen(middleTip, middlePip))
+    count++;
+
+  if (fingerOpen(ringTip, ringPip))
+    count++;
+
+  if (fingerOpen(pinkyTip, pinkyPip))
+    count++;
+
+
+  // ===============================
+  // OPEN PALM
+  // ===============================
+
+  if (count >= 3) {
+
+    status.innerText = "✋ OPEN PALM DETECTED";
 
     if (
-        results.multiHandLandmarks &&
-        results.multiHandLandmarks.length > 0
+      !palmDetected &&
+      Date.now() > explosionCooldown
     ) {
 
-        const hand =
-            results.multiHandLandmarks[0];
+      palmDetected = true;
 
+      explodeStars();
 
-        /* INDEX FINGER */
-
-        const indexFinger = hand[8];
-
-        fingerX =
-            (1 - indexFinger.x) *
-            canvas.width;
-
-        fingerY =
-            indexFinger.y *
-            canvas.height;
-
-        fingerDetected = true;
-
-
-        /*
-        SIMPLE OPEN HAND DETECTION
-
-        Check whether fingers are extended.
-        */
-
-        const indexOpen =
-            hand[8].y < hand[6].y;
-
-        const middleOpen =
-            hand[12].y < hand[10].y;
-
-        const ringOpen =
-            hand[16].y < hand[14].y;
-
-        const pinkyOpen =
-            hand[20].y < hand[18].y;
-
-
-        const openCount =
-            Number(indexOpen) +
-            Number(middleOpen) +
-            Number(ringOpen) +
-            Number(pinkyOpen);
-
-
-        /*
-        3 OR MORE OPEN FINGERS
-        = OPEN PALM
-        */
-
-        const newPalmOpen =
-            openCount >= 3;
-
-
-        /*
-        Trigger explosion only
-        when palm becomes open
-        */
-
-        if (
-            newPalmOpen &&
-            !palmOpen
-        ) {
-
-            palmOpen = true;
-
-            explodeStars();
-
-        }
-
-        else if (!newPalmOpen) {
-
-            palmOpen = false;
-
-        }
-
-
-        /* STATUS */
-
-        if (palmOpen) {
-
-            status.innerText =
-                "💥 STAR EXPLOSION!";
-
-        }
-
-        else {
-
-            status.innerText =
-                "🧲 MAGIC MAGNET ACTIVE";
-
-        }
-
+      explosionCooldown = Date.now() + 1000;
     }
 
-    else {
+  }
 
-        fingerDetected = false;
-        palmOpen = false;
+  else {
 
-        status.innerText =
-            "☝️ Show your hand";
+    palmDetected = false;
 
-    }
+    status.innerText = "☝️ Show Open Palm";
+  }
 
 });
 
 
-/* CAMERA */
+// ===============================
+// CAMERA
+// ===============================
 
 const camera = new Camera(video, {
 
-    onFrame: async function() {
+  onFrame: async () => {
 
-        await hands.send({
-            image: video
-        });
+    await hands.send({
+      image: video
+    });
 
-    },
+  },
 
-    width: 640,
-    height: 480
+  width: 640,
+  height: 480
 
 });
 
 camera.start();
+
+
+// ===============================
+// RESIZE
+// ===============================
+
+window.addEventListener("resize", () => {
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+});
 
 </script>
 
