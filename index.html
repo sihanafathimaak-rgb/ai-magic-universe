@@ -1,71 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>AI Magic Universe</title>
 
-<title>AI Magic Universe</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+      font-family: Arial, sans-serif;
+    }
 
-<style>
+    canvas {
+      position: fixed;
+      inset: 0;
+    }
 
-* {
-  box-sizing: border-box;
-}
+    #video {
+      display: none;
+    }
 
-body {
-  margin: 0;
-  overflow: hidden;
-  background: black;
-  font-family: Arial, sans-serif;
-}
+    #title {
+      position: fixed;
+      top: 15px;
+      width: 100%;
+      text-align: center;
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      z-index: 5;
+      text-shadow: 0 0 15px cyan;
+    }
 
-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-}
+    #status {
+      position: fixed;
+      top: 60px;
+      left: 15px;
+      z-index: 5;
+      color: white;
+      background: rgba(0,0,0,0.65);
+      padding: 10px 15px;
+      border-radius: 12px;
+      font-size: 16px;
+    }
 
-#video {
-  display: none;
-}
-
-#title {
-  position: fixed;
-  top: 18px;
-  width: 100%;
-  text-align: center;
-  color: white;
-  font-size: 28px;
-  font-weight: bold;
-  z-index: 10;
-  text-shadow: 0 0 15px #00ffff;
-}
-
-#status {
-  position: fixed;
-  top: 65px;
-  left: 20px;
-  color: white;
-  font-size: 17px;
-  z-index: 10;
-  background: rgba(0,0,0,0.55);
-  padding: 10px 16px;
-  border-radius: 15px;
-}
-
-#controls {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  color: white;
-  background: rgba(0,0,0,0.55);
-  padding: 12px 16px;
-  border-radius: 15px;
-  font-size: 14px;
-  line-height: 1.7;
-  z-index: 10;
-}
-
-</style>
-
+    #controls {
+      position: fixed;
+      bottom: 15px;
+      left: 15px;
+      z-index: 5;
+      color: white;
+      background: rgba(0,0,0,0.65);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+  </style>
 </head>
 
 <body>
@@ -74,27 +65,20 @@ canvas {
 
 <canvas id="canvas"></canvas>
 
-<div id="title">
-🌌 AI MAGIC UNIVERSE ✨
-</div>
+<div id="title">🌌 AI MAGIC UNIVERSE ✨</div>
 
-<div id="status">
-🤖 Starting AI...
-</div>
+<div id="status">🤖 Starting AI...</div>
 
 <div id="controls">
-☝️ 1 Finger → Magnet 🧲<br>
-✌️ 2 Fingers → Vortex 🌀<br>
-🖐️ 3 Fingers → Explosion 💥<br>
-✋ Full Palm → Supernova 🌟<br>
-👊 Fist → Black Hole 🕳️
+  ☝️ 1 Finger → Magnet 🧲<br>
+  ✌️ 2 Fingers → Vortex 🌀<br>
+  🖐️ 3 Fingers → Explosion 💥<br>
+  ✋ Full Palm → Super Explosion 🌟<br>
+  👊 Fist → Black Hole 🕳️
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-
 
 <script>
 
@@ -108,16 +92,15 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 
-// ==========================================
+// =====================================================
 // PLANETS
-// ==========================================
+// =====================================================
 
 const planets = [
-
   {
-    x: 0.15,
+    x: 0.12,
     y: 0.25,
-    radius: 55,
+    r: 50,
     type: "blue",
     ring: false
   },
@@ -125,7 +108,7 @@ const planets = [
   {
     x: 0.82,
     y: 0.22,
-    radius: 75,
+    r: 65,
     type: "purple",
     ring: true
   },
@@ -133,147 +116,31 @@ const planets = [
   {
     x: 0.88,
     y: 0.72,
-    radius: 42,
+    r: 38,
     type: "red",
     ring: false
   },
 
   {
-    x: 0.20,
+    x: 0.18,
     y: 0.78,
-    radius: 32,
+    r: 30,
     type: "green",
     ring: true
   }
-
 ];
 
 
-// ==========================================
-// DRAW PLANETS
-// ==========================================
-
 function drawPlanets() {
 
-  for (let planet of planets) {
+  for (const p of planets) {
 
-    const x =
-      planet.x * canvas.width;
-
-    const y =
-      planet.y * canvas.height;
-
-    const r = planet.radius;
+    const x = p.x * canvas.width;
+    const y = p.y * canvas.height;
+    const r = p.r;
 
 
-    // ------------------------------
-    // GLOW
-    // ------------------------------
-
-    ctx.save();
-
-    ctx.beginPath();
-
-    ctx.arc(
-      x,
-      y,
-      r + 15,
-      0,
-      Math.PI * 2
-    );
-
-    let glow;
-
-    if (planet.type === "blue") {
-
-      glow = "rgba(0,150,255,0.18)";
-
-    } else if (planet.type === "purple") {
-
-      glow = "rgba(180,80,255,0.18)";
-
-    } else if (planet.type === "red") {
-
-      glow = "rgba(255,80,50,0.18)";
-
-    } else {
-
-      glow = "rgba(50,255,150,0.18)";
-    }
-
-    ctx.fillStyle = glow;
-
-    ctx.fill();
-
-    ctx.restore();
-
-
-    // ------------------------------
-    // PLANET GRADIENT
-    // ------------------------------
-
-    let gradient =
-      ctx.createRadialGradient(
-        x - r * 0.35,
-        y - r * 0.35,
-        r * 0.1,
-        x,
-        y,
-        r
-      );
-
-
-    if (planet.type === "blue") {
-
-      gradient.addColorStop(0, "#9eeaff");
-      gradient.addColorStop(0.45, "#168cff");
-      gradient.addColorStop(1, "#00143d");
-
-    }
-
-    else if (planet.type === "purple") {
-
-      gradient.addColorStop(0, "#ffd6ff");
-      gradient.addColorStop(0.45, "#9b35ff");
-      gradient.addColorStop(1, "#21002f");
-
-    }
-
-    else if (planet.type === "red") {
-
-      gradient.addColorStop(0, "#ffb08a");
-      gradient.addColorStop(0.5, "#e13b28");
-      gradient.addColorStop(1, "#3d0500");
-
-    }
-
-    else {
-
-      gradient.addColorStop(0, "#baffdf");
-      gradient.addColorStop(0.5, "#20b879");
-      gradient.addColorStop(1, "#00291d");
-
-    }
-
-
-    ctx.beginPath();
-
-    ctx.arc(
-      x,
-      y,
-      r,
-      0,
-      Math.PI * 2
-    );
-
-    ctx.fillStyle = gradient;
-
-    ctx.fill();
-
-
-    // ------------------------------
-    // PLANET DETAILS
-    // ------------------------------
+    // Planet glow
 
     ctx.save();
 
@@ -281,28 +148,69 @@ function drawPlanets() {
 
     ctx.beginPath();
 
-    ctx.ellipse(
-      x - r * 0.15,
-      y + r * 0.1,
-      r * 0.55,
-      r * 0.12,
-      -0.2,
-      0,
-      Math.PI * 2
-    );
+    ctx.arc(x, y, r + 15, 0, Math.PI * 2);
 
-    ctx.fillStyle = "white";
+    ctx.fillStyle =
+      p.type === "blue" ? "#008cff" :
+      p.type === "purple" ? "#a855ff" :
+      p.type === "red" ? "#ff4020" :
+      "#20ff9a";
 
     ctx.fill();
 
     ctx.restore();
 
 
-    // ------------------------------
-    // RING
-    // ------------------------------
+    // Planet gradient
 
-    if (planet.ring) {
+    const gradient = ctx.createRadialGradient(
+      x - r * 0.35,
+      y - r * 0.35,
+      5,
+      x,
+      y,
+      r
+    );
+
+
+    if (p.type === "blue") {
+
+      gradient.addColorStop(0, "#b8f4ff");
+      gradient.addColorStop(0.5, "#168cff");
+      gradient.addColorStop(1, "#00183f");
+
+    } else if (p.type === "purple") {
+
+      gradient.addColorStop(0, "#ffd8ff");
+      gradient.addColorStop(0.5, "#a238ff");
+      gradient.addColorStop(1, "#21002f");
+
+    } else if (p.type === "red") {
+
+      gradient.addColorStop(0, "#ffb08a");
+      gradient.addColorStop(0.5, "#e13b28");
+      gradient.addColorStop(1, "#390500");
+
+    } else {
+
+      gradient.addColorStop(0, "#c0ffe0");
+      gradient.addColorStop(0.5, "#20b879");
+      gradient.addColorStop(1, "#00291d");
+    }
+
+
+    ctx.beginPath();
+
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+
+    ctx.fillStyle = gradient;
+
+    ctx.fill();
+
+
+    // Ring
+
+    if (p.ring) {
 
       ctx.save();
 
@@ -315,233 +223,208 @@ function drawPlanets() {
       ctx.ellipse(
         0,
         0,
-        r * 1.65,
-        r * 0.38,
+        r * 1.7,
+        r * 0.4,
         0,
         0,
         Math.PI * 2
       );
 
-      ctx.strokeStyle =
-        "rgba(220,220,255,0.65)";
-
+      ctx.strokeStyle = "rgba(230,230,255,0.7)";
       ctx.lineWidth = 5;
 
       ctx.stroke();
 
       ctx.restore();
     }
-
   }
-
 }
 
 
-// ==========================================
+// =====================================================
 // STARS
-// ==========================================
+// =====================================================
 
-const STAR_COUNT = 650;
+const STAR_COUNT = 500;
 
 let stars = [];
-
 
 for (let i = 0; i < STAR_COUNT; i++) {
 
   stars.push({
-
     x: Math.random() * canvas.width,
-
     y: Math.random() * canvas.height,
 
     vx: 0,
-
     vy: 0,
 
     size: Math.random() * 2 + 0.5,
 
-    alpha: Math.random(),
-
-    twinkle: Math.random() * 0.03 + 0.01
-
+    alpha: Math.random()
   });
-
 }
 
 
-// ==========================================
+// =====================================================
 // HAND VARIABLES
-// ==========================================
+// =====================================================
 
 let fingerDetected = false;
 
 let fingerX = 0;
 let fingerY = 0;
 
-let handX = 0;
-let handY = 0;
+let palmX = 0;
+let palmY = 0;
 
-let currentGesture = -1;
+let gesture = -1;
 
-let blackHoleX = 0;
-let blackHoleY = 0;
-
-let explosionLife = 0;
-
-let trails = [];
+let lastExplosion = 0;
 
 
-// ==========================================
+// =====================================================
 // MAGNET
-// ==========================================
+// =====================================================
 
 function magnetEffect() {
 
   if (!fingerDetected) return;
 
-  if (currentGesture !== 1) return;
+  if (gesture !== 1) return;
 
 
-  for (let star of stars) {
+  for (const star of stars) {
 
-    const dx =
-      fingerX - star.x;
-
-    const dy =
-      fingerY - star.y;
+    const dx = fingerX - star.x;
+    const dy = fingerY - star.y;
 
     const distance =
       Math.sqrt(dx * dx + dy * dy);
 
 
-    if (
-      distance < 430 &&
-      distance > 8
-    ) {
+    if (distance < 400 && distance > 5) {
 
       const force =
-        (430 - distance) / 430;
+        (400 - distance) / 400;
 
 
-      star.x +=
-        dx * force * 0.035;
-
-      star.y +=
-        dy * force * 0.035;
+      star.x += dx * force * 0.04;
+      star.y += dy * force * 0.04;
 
 
-      star.x +=
-        -dy * force * 0.018;
+      // swirl
 
-      star.y +=
-        dx * force * 0.018;
-
+      star.x += -dy * force * 0.015;
+      star.y += dx * force * 0.015;
     }
-
   }
-
 }
 
 
-// ==========================================
+// =====================================================
 // VORTEX
-// ==========================================
+// =====================================================
 
 function vortexEffect() {
 
   if (!fingerDetected) return;
 
-  if (currentGesture !== 2) return;
+  if (gesture !== 2) return;
 
 
-  for (let star of stars) {
+  for (const star of stars) {
 
-    const dx =
-      star.x - handX;
-
-    const dy =
-      star.y - handY;
+    const dx = star.x - palmX;
+    const dy = star.y - palmY;
 
     const distance =
       Math.sqrt(dx * dx + dy * dy);
 
 
-    if (
-      distance < 500 &&
-      distance > 20
-    ) {
+    if (distance < 450 && distance > 15) {
 
       const force =
-        (500 - distance) / 500;
+        (450 - distance) / 450;
 
 
-      star.x +=
-        -dy * force * 0.025;
+      // Rotation
 
-      star.y +=
-        dx * force * 0.025;
+      star.x += -dy * force * 0.03;
+      star.y += dx * force * 0.03;
 
 
-      star.x +=
-        -dx * force * 0.008;
+      // Small attraction
 
-      star.y +=
-        -dy * force * 0.008;
-
+      star.x += -dx * force * 0.008;
+      star.y += -dy * force * 0.008;
     }
-
   }
-
 }
 
 
-// ==========================================
+// =====================================================
+// EXPLOSION
+// =====================================================
+
+function explode(power) {
+
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+
+
+  for (const star of stars) {
+
+    const dx = star.x - cx;
+    const dy = star.y - cy;
+
+    const distance =
+      Math.sqrt(dx * dx + dy * dy) || 1;
+
+
+    star.vx += (dx / distance) * power;
+    star.vy += (dy / distance) * power;
+  }
+}
+
+
+// =====================================================
 // BLACK HOLE
-// ==========================================
+// =====================================================
 
-function fistEffect() {
+function blackHoleEffect() {
 
-  if (currentGesture !== 0) return;
+  if (!fingerDetected) return;
+
+  if (gesture !== 0) return;
 
 
-  for (let star of stars) {
+  for (const star of stars) {
 
-    const dx =
-      blackHoleX - star.x;
-
-    const dy =
-      blackHoleY - star.y;
+    const dx = palmX - star.x;
+    const dy = palmY - star.y;
 
     const distance =
       Math.sqrt(dx * dx + dy * dy);
 
 
-    if (
-      distance < 500 &&
-      distance > 8
-    ) {
+    if (distance < 450 && distance > 8) {
 
       const force =
-        (500 - distance) / 500;
+        (450 - distance) / 450;
 
 
-      star.x +=
-        dx * force * 0.045;
-
-      star.y +=
-        dy * force * 0.045;
+      star.x += dx * force * 0.045;
+      star.y += dy * force * 0.045;
 
 
-      star.x +=
-        -dy * force * 0.035;
+      // Rotation
 
-      star.y +=
-        dx * force * 0.035;
-
+      star.x += -dy * force * 0.025;
+      star.y += dx * force * 0.025;
     }
 
 
-    if (distance < 12) {
+    if (distance < 10) {
 
       star.x =
         Math.random() * canvas.width;
@@ -551,20 +434,18 @@ function fistEffect() {
 
       star.vx = 0;
       star.vy = 0;
-
     }
-
   }
 
 
-  // BLACK HOLE
+  // Black hole
 
   ctx.beginPath();
 
   ctx.arc(
-    blackHoleX,
-    blackHoleY,
-    45,
+    palmX,
+    palmY,
+    38,
     0,
     Math.PI * 2
   );
@@ -574,21 +455,17 @@ function fistEffect() {
   ctx.fill();
 
 
-  // RINGS
-
   ctx.beginPath();
 
   ctx.arc(
-    blackHoleX,
-    blackHoleY,
-    65,
+    palmX,
+    palmY,
+    60,
     0,
     Math.PI * 2
   );
 
-  ctx.strokeStyle =
-    "rgba(180,100,255,0.8)";
-
+  ctx.strokeStyle = "rgba(180,100,255,0.8)";
   ctx.lineWidth = 5;
 
   ctx.stroke();
@@ -597,174 +474,39 @@ function fistEffect() {
   ctx.beginPath();
 
   ctx.arc(
-    blackHoleX,
-    blackHoleY,
-    90,
+    palmX,
+    palmY,
+    82,
     0,
     Math.PI * 2
   );
 
-  ctx.strokeStyle =
-    "rgba(0,255,255,0.35)";
-
+  ctx.strokeStyle = "rgba(0,255,255,0.35)";
   ctx.lineWidth = 3;
 
   ctx.stroke();
-
 }
 
 
-// ==========================================
-// EXPLOSION
-// ==========================================
-
-function explodeStars(power) {
-
-  const centerX =
-    canvas.width / 2;
-
-  const centerY =
-    canvas.height / 2;
-
-
-  for (let star of stars) {
-
-    const dx =
-      star.x - centerX;
-
-    const dy =
-      star.y - centerY;
-
-    const distance =
-      Math.sqrt(dx * dx + dy * dy) || 1;
-
-
-    star.vx +=
-      (dx / distance) * power;
-
-    star.vy +=
-      (dy / distance) * power;
-
-  }
-
-
-  explosionLife = 30;
-
-}
-
-
-// ==========================================
-// EXPLOSION RING
-// ==========================================
-
-function drawExplosion() {
-
-  if (explosionLife <= 0)
-    return;
-
-
-  const centerX =
-    canvas.width / 2;
-
-  const centerY =
-    canvas.height / 2;
-
-
-  const radius =
-    (30 - explosionLife) * 25;
-
-
-  ctx.beginPath();
-
-  ctx.arc(
-    centerX,
-    centerY,
-    radius,
-    0,
-    Math.PI * 2
-  );
-
-
-  ctx.strokeStyle =
-    "rgba(255,255,255," +
-    (explosionLife / 30) +
-    ")";
-
-
-  ctx.lineWidth = 6;
-
-  ctx.stroke();
-
-
-  explosionLife--;
-
-}
-
-
-// ==========================================
-// TRAIL
-// ==========================================
-
-function drawTrail() {
-
-  if (!fingerDetected)
-    return;
-
-
-  trails.push({
-
-    x: fingerX,
-
-    y: fingerY,
-
-    life: 1
-
-  });
-
-
-  if (trails.length > 25)
-    trails.shift();
-
-
-  for (let trail of trails) {
-
-    ctx.beginPath();
-
-    ctx.arc(
-      trail.x,
-      trail.y,
-      4,
-      0,
-      Math.PI * 2
-    );
-
-
-    ctx.fillStyle =
-      "rgba(0,255,255," +
-      trail.life +
-      ")";
-
-
-    ctx.fill();
-
-    trail.life -= 0.04;
-
-  }
-
-}
-
-
-// ==========================================
+// =====================================================
 // ANIMATION
-// ==========================================
+// =====================================================
 
 function animate() {
 
+  // Clean background
 
-  // BACKGROUND
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
 
-  ctx.fillStyle =
-    "rgba(0,0,10,0.25)";
+
+  // Dark space
+
+  ctx.fillStyle = "#020008";
 
   ctx.fillRect(
     0,
@@ -775,29 +517,25 @@ function animate() {
 
 
   // PLANETS FIRST
-  // So they stay in background
 
   drawPlanets();
 
 
   // STARS
 
-  for (let star of stars) {
+  for (const star of stars) {
 
     star.x += star.vx;
     star.y += star.vy;
 
 
-    star.vx *= 0.975;
-    star.vy *= 0.975;
+    // friction
+
+    star.vx *= 0.97;
+    star.vy *= 0.97;
 
 
-    star.alpha += star.twinkle;
-
-
-    if (star.alpha > 1)
-      star.alpha = 0;
-
+    // wrap
 
     if (star.x < 0)
       star.x = canvas.width;
@@ -822,15 +560,9 @@ function animate() {
       Math.PI * 2
     );
 
-
-    ctx.fillStyle =
-      "rgba(255,255,255," +
-      (0.4 + star.alpha * 0.6) +
-      ")";
-
+    ctx.fillStyle = "white";
 
     ctx.fill();
-
   }
 
 
@@ -840,18 +572,14 @@ function animate() {
 
   vortexEffect();
 
-  fistEffect();
-
-  drawTrail();
-
-  drawExplosion();
+  blackHoleEffect();
 
 
-  // FINGER MAGIC RING
+  // Finger ring
 
   if (
     fingerDetected &&
-    currentGesture === 1
+    gesture === 1
   ) {
 
     ctx.beginPath();
@@ -859,61 +587,41 @@ function animate() {
     ctx.arc(
       fingerX,
       fingerY,
-      28,
+      25,
       0,
       Math.PI * 2
     );
 
-    ctx.strokeStyle =
-      "#00ffff";
+    ctx.strokeStyle = "#00ffff";
 
     ctx.lineWidth = 4;
 
     ctx.stroke();
-
-
-    ctx.beginPath();
-
-    ctx.arc(
-      fingerX,
-      fingerY,
-      45,
-      0,
-      Math.PI * 2
-    );
-
-    ctx.strokeStyle =
-      "rgba(0,255,255,0.3)";
-
-    ctx.lineWidth = 2;
-
-    ctx.stroke();
-
   }
 
 
   requestAnimationFrame(animate);
-
 }
 
 
 animate();
 
 
-// ==========================================
+// =====================================================
 // MEDIAPIPE
-// ==========================================
+// =====================================================
 
-const hands =
-  new Hands({
+const hands = new Hands({
 
-    locateFile: (file) => {
+  locateFile: (file) => {
 
-      return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+    return (
+      "https://cdn.jsdelivr.net/npm/@mediapipe/hands/" +
+      file
+    );
+  }
 
-    }
-
-  });
+});
 
 
 hands.setOptions({
@@ -929,12 +637,9 @@ hands.setOptions({
 });
 
 
-let lastExplosion = 0;
-
-
-// ==========================================
+// =====================================================
 // HAND RESULTS
-// ==========================================
+// =====================================================
 
 hands.onResults((results) => {
 
@@ -946,13 +651,12 @@ hands.onResults((results) => {
 
     fingerDetected = false;
 
-    currentGesture = -1;
+    gesture = -1;
 
     status.innerText =
       "🤚 Show your hand";
 
     return;
-
   }
 
 
@@ -960,11 +664,10 @@ hands.onResults((results) => {
     results.multiHandLandmarks[0];
 
 
-  const wrist =
-    hand[0];
+  const wrist = hand[0];
 
 
-  // INDEX POSITION
+  // Index position
 
   fingerDetected = true;
 
@@ -973,33 +676,27 @@ hands.onResults((results) => {
     (1 - hand[8].x) *
     canvas.width;
 
-
   fingerY =
     hand[8].y *
     canvas.height;
 
 
-  // PALM POSITION
+  // Palm position
 
-  handX =
+  palmX =
     (1 - hand[9].x) *
     canvas.width;
 
-  handY =
+  palmY =
     hand[9].y *
     canvas.height;
 
 
-  blackHoleX =
-    handX;
+  // =================================================
+  // FINGER DETECTION
+  // =================================================
 
-  blackHoleY =
-    handY;
-
-
-  // FINGER CHECK
-
-  function fingerOpen(tip, pip) {
+  function isOpen(tip, pip) {
 
     const tipDistance =
       Math.hypot(
@@ -1019,125 +716,91 @@ hands.onResults((results) => {
       tipDistance >
       pipDistance * 1.05
     );
-
   }
 
 
-  const indexOpen =
-    fingerOpen(
-      hand[8],
-      hand[6]
-    );
+  const index =
+    isOpen(hand[8], hand[6]);
 
 
-  const middleOpen =
-    fingerOpen(
-      hand[12],
-      hand[10]
-    );
+  const middle =
+    isOpen(hand[12], hand[10]);
 
 
-  const ringOpen =
-    fingerOpen(
-      hand[16],
-      hand[14]
-    );
+  const ring =
+    isOpen(hand[16], hand[14]);
 
 
-  const pinkyOpen =
-    fingerOpen(
-      hand[20],
-      hand[18]
-    );
+  const pinky =
+    isOpen(hand[20], hand[18]);
 
 
-  let openCount = 0;
+  let count = 0;
 
 
-  if (indexOpen)
-    openCount++;
+  if (index) count++;
+  if (middle) count++;
+  if (ring) count++;
+  if (pinky) count++;
 
 
-  if (middleOpen)
-    openCount++;
-
-
-  if (ringOpen)
-    openCount++;
-
-
-  if (pinkyOpen)
-    openCount++;
-
-
-  // ========================================
+  // =================================================
   // FULL PALM
-  // ========================================
+  // =================================================
 
-  if (openCount === 4) {
+  if (count === 4) {
 
-    currentGesture = 4;
-
+    gesture = 4;
 
     status.innerText =
-      "✋ FULL PALM — SUPERNOVA 🌟";
+      "✋ FULL PALM — SUPER EXPLOSION 🌟";
 
 
-    const now =
-      Date.now();
+    const now = Date.now();
 
 
-    if (
-      now - lastExplosion > 1000
-    ) {
+    if (now - lastExplosion > 1000) {
 
-      explodeStars(18);
+      explode(18);
 
       lastExplosion = now;
-
     }
 
   }
 
 
-  // ========================================
+  // =================================================
   // 3 FINGERS
-  // ========================================
+  // =================================================
 
-  else if (openCount === 3) {
+  else if (count === 3) {
 
-    currentGesture = 3;
-
+    gesture = 3;
 
     status.innerText =
       "🖐️ 3 FINGERS — EXPLOSION 💥";
 
 
-    const now =
-      Date.now();
+    const now = Date.now();
 
 
-    if (
-      now - lastExplosion > 1000
-    ) {
+    if (now - lastExplosion > 1000) {
 
-      explodeStars(10);
+      explode(10);
 
       lastExplosion = now;
-
     }
 
   }
 
 
-  // ========================================
+  // =================================================
   // 2 FINGERS
-  // ========================================
+  // =================================================
 
-  else if (openCount === 2) {
+  else if (count === 2) {
 
-    currentGesture = 2;
-
+    gesture = 2;
 
     status.innerText =
       "✌️ TWO FINGERS — COSMIC VORTEX 🌀";
@@ -1145,14 +808,13 @@ hands.onResults((results) => {
   }
 
 
-  // ========================================
+  // =================================================
   // 1 FINGER
-  // ========================================
+  // =================================================
 
-  else if (openCount === 1) {
+  else if (count === 1) {
 
-    currentGesture = 1;
-
+    gesture = 1;
 
     status.innerText =
       "☝️ MAGIC MAGNET ACTIVE 🧲";
@@ -1160,26 +822,24 @@ hands.onResults((results) => {
   }
 
 
-  // ========================================
+  // =================================================
   // FIST
-  // ========================================
+  // =================================================
 
   else {
 
-    currentGesture = 0;
-
+    gesture = 0;
 
     status.innerText =
       "👊 BLACK HOLE ACTIVE 🕳️";
-
   }
 
 });
 
 
-// ==========================================
+// =====================================================
 // CAMERA
-// ==========================================
+// =====================================================
 
 const camera =
   new Camera(video, {
@@ -1193,7 +853,6 @@ const camera =
     },
 
     width: 640,
-
     height: 480
 
   });
@@ -1202,22 +861,17 @@ const camera =
 camera.start();
 
 
-// ==========================================
+// =====================================================
 // RESIZE
-// ==========================================
+// =====================================================
 
-window.addEventListener(
-  "resize",
-  () => {
+window.addEventListener("resize", () => {
 
-    canvas.width =
-      window.innerWidth;
+  canvas.width = window.innerWidth;
 
-    canvas.height =
-      window.innerHeight;
+  canvas.height = window.innerHeight;
 
-  }
-);
+});
 
 </script>
 
