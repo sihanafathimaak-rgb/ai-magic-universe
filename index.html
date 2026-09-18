@@ -125,7 +125,7 @@ let fingerDetected = false;
 
 let stars = [];
 
-const STAR_COUNT = 800;
+const STAR_COUNT = 400;
 
 
 function createStars() {
@@ -152,7 +152,6 @@ function createStars() {
 
 }
 
-
 createStars();
 
 
@@ -174,7 +173,7 @@ function animate() {
         let y = star.y;
 
 
-        /* SLOW STAR MOVEMENT */
+        /* STAR MOVEMENT */
 
         star.y -= star.speed;
 
@@ -205,7 +204,6 @@ function animate() {
                 const force =
                     (200 - distance) / 200;
 
-
                 x += dx * force * 0.18;
 
                 y += dy * force * 0.18;
@@ -230,13 +228,7 @@ function animate() {
         ctx.fillStyle =
             `rgba(255,255,255,${star.alpha})`;
 
-        ctx.shadowBlur = 8;
-
-        ctx.shadowColor = "white";
-
         ctx.fill();
-
-        ctx.shadowBlur = 0;
 
     }
 
@@ -245,7 +237,7 @@ function animate() {
 
     if (fingerDetected) {
 
-        /* Outer glow */
+        /* OUTER GLOW */
 
         ctx.beginPath();
 
@@ -269,7 +261,7 @@ function animate() {
         ctx.stroke();
 
 
-        /* Inner glow */
+        /* INNER GLOW */
 
         ctx.beginPath();
 
@@ -339,7 +331,7 @@ hands.onResults(function(results) {
             results.multiHandLandmarks[0];
 
 
-        /* INDEX FINGER TIP = 8 */
+        /* INDEX FINGER TIP */
 
         const indexFinger = hand[8];
 
